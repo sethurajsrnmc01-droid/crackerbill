@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Minimal Top Bar Inputs
   const invDateInput = document.getElementById('invDate');
+  const invNoInput = document.getElementById('invNoInput');
   const paymentModeInput = document.getElementById('paymentMode');
 
   // Live Invoice Sheet Elements
@@ -78,8 +79,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fetch and restore Sales History directly from Google Sheets if LocalStorage is empty
     fetchSalesHistoryFromSheets();
 
-    // Default today's date
+    // Default today's date and bill number
     if (invDateInput) invDateInput.value = state.invoice.date;
+    if (invNoInput) invNoInput.value = state.invoice.invoiceNo;
   }
 
   // Generate today's date formatted (YYYY-MM-DD)
@@ -101,11 +103,40 @@ document.addEventListener('DOMContentLoaded', () => {
     return dateStr;
   }
 
-  // Generate unique Surya Crackers invoice bill number
+  // Extract numerical sequence from bill number string (e.g. SURYA-2026-1001 -> 1001)
+  function extractSequenceNumber(billNoStr) {
+    if (!billNoStr || typeof billNoStr !== 'string') return 0;
+    const match = billNoStr.match(/(\d+)\s*$/);
+    if (match && match[1]) {
+      const num = parseInt(match[1], 10);
+      return isNaN(num) ? 0 : num;
+    }
+    return 0;
+  }
+
+  // Get the highest sequence number present in sales history
+  function getHighestSequenceFromHistory() {
+    const history = getSalesHistoryFromStorage() || [];
+    let maxSeq = 0;
+    history.forEach(item => {
+      const billNoStr = item.billNo || item.id || '';
+      const seq = extractSequenceNumber(billNoStr);
+      if (seq > maxSeq) {
+        maxSeq = seq;
+      }
+    });
+    return maxSeq;
+  }
+
+  // Generate unique sequential Surya Crackers invoice bill number
   function generateInvoiceNumber() {
-    const randomNum = Math.floor(1000 + Math.random() * 9000);
     const year = new Date().getFullYear();
-    return `SURYA-${year}-${randomNum}`;
+    const historyMax = getHighestSequenceFromHistory();
+    // Default baseline is 1000 if no history records exist yet
+    const baseSeq = historyMax > 0 ? historyMax : 1000;
+    const nextSeq = baseSeq + 1;
+    const formattedSeq = nextSeq < 1000 ? String(nextSeq).padStart(4, '0') : String(nextSeq);
+    return `SURYA-${year}-${formattedSeq}`;
   }
 
   // Build Category Pill Buttons
@@ -131,11 +162,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Listen to Top Bar Changes (Date & Payment Mode)
+  // Listen to Top Bar Changes (Date, Bill No & Payment Mode)
   function setupTopBarListeners() {
     if (invDateInput) {
       invDateInput.addEventListener('change', (e) => {
         state.invoice.date = e.target.value;
+        renderLiveInvoice();
+      });
+    }
+    if (invNoInput) {
+      invNoInput.addEventListener('input', (e) => {
+        state.invoice.invoiceNo = e.target.value.trim();
         renderLiveInvoice();
       });
     }
@@ -156,7 +193,8 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
         state.cart = {};
-        state.invoice.invoiceNo = generateInvoiceNumber(); // Generate fresh bill no
+        state.invoice.invoiceNo = generateInvoiceNumber(); // Generate fresh sequential bill no
+        if (invNoInput) invNoInput.value = state.invoice.invoiceNo;
         renderOrderTable();
         updateCalculations();
         showToast('All quantities reset & new bill created!');
@@ -172,6 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.invoice.paymentMode = 'Cash';
 
     if (invDateInput) invDateInput.value = state.invoice.date;
+    if (invNoInput) invNoInput.value = state.invoice.invoiceNo;
     if (paymentModeInput) paymentModeInput.value = 'Cash';
 
     renderOrderTable();
@@ -470,6 +509,13 @@ document.addEventListener('DOMContentLoaded', () => {
           localStorage.setItem('sivakasi_sales_history', JSON.stringify(restoredRecords));
           localStorage.setItem('salesHistory', JSON.stringify(restoredRecords));
 
+          // Auto-update active bill sequence if current cart is empty
+          if (Object.keys(state.cart).length === 0) {
+            state.invoice.invoiceNo = generateInvoiceNumber();
+            if (invNoInput) invNoInput.value = state.invoice.invoiceNo;
+            renderLiveInvoice();
+          }
+
           renderSalesHistory();
           showToast('Sales history restored from Google Sheets!');
         }
@@ -639,6 +685,7 @@ document.addEventListener('DOMContentLoaded', () => {
           state.cart = JSON.parse(JSON.stringify(record.cart || {}));
 
           if (invDateInput) invDateInput.value = record.date;
+          if (invNoInput) invNoInput.value = record.id;
           if (paymentModeInput) paymentModeInput.value = record.paymentMode;
 
           renderOrderTable();
