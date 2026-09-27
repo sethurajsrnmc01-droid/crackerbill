@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Surya Crackers Billing & Invoice System</title>
+  <meta name="description" content="Seamless Surya Crackers Billing and Invoice System with live A4 preview and dynamic scaling.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💥</text></svg>">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Main Application Wrapper (Seamless Minimal Layout) -->
+  <main class="main-wrapper">
+    <div class="split-container">
+      
+      <!-- =================================================================== -->
+      <!-- LEFT PANEL (60% Width): Interactive Crackers Order Table           -->
+      <!-- =================================================================== -->
+      <section class="left-panel">
+        
+        <!-- Seamless Control Toolbar -->
+        <div class="top-toolbar">
+          
+          <!-- Single-Line Date & Payment Mode -->
+          <div class="top-bar-inputs">
+            <div class="form-group inline">
+              <label for="invDate">Date:</label>
+              <input type="date" id="invDate" class="form-input">
+            </div>
+
+            <div class="form-group inline">
+              <label for="paymentMode">Payment Mode:</label>
+              <select id="paymentMode" class="form-input">
+                <option value="Cash" selected>Cash</option>
+                <option value="UPI / GPay">UPI / GPay / PhonePe</option>
+                <option value="Card">Credit / Debit Card</option>
+                <option value="Bank Transfer">Net Banking / NEFT</option>
+              </select>
+            </div>
+
+            <button id="btnSaveInvoice" class="btn btn-purple btn-top-save">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+              Save Invoice
+            </button>
+          </div>
+
+          <!-- Category Filter Pills -->
+          <div class="category-pills" id="categoryPills">
+            <!-- Category buttons injected dynamically -->
+          </div>
+
+          <!-- Minimal Summary Stats -->
+          <div class="summary-bar">
+            <div class="stat-item">
+              <span class="stat-label">Total Items</span>
+              <span class="stat-value" id="statTotalItems">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Total MRP</span>
+              <span class="stat-value" id="statTotalMRP">₹0</span>
+            </div>
+            <div class="stat-item savings">
+              <span class="stat-label">Total Savings (80% Off)</span>
+              <span class="stat-value green" id="statTotalSavings">₹0</span>
+            </div>
+            <div class="stat-item payable">
+              <span class="stat-label">Net Payable</span>
+              <span class="stat-value purple" id="statNetPayable">₹0</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Interactive Crackers Table -->
+        <div class="table-container">
+          <table class="crackers-table">
+            <thead>
+              <tr>
+                <th class="col-code">CODE</th>
+                <th>Product Description</th>
+                <th class="col-mrp">Actual Price</th>
+                <th class="col-price">Offer Price</th>
+                <th class="col-qty" style="text-align: center;">Quantity</th>
+                <th class="col-total" style="text-align: right;">Total (₹)</th>
+              </tr>
+            </thead>
+            <tbody id="orderTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- RIGHT PANEL (40% Width): Live A4 Invoice Sheet Preview             -->
+      <!-- =================================================================== -->
+      <section class="right-panel">
+        <div class="invoice-preview-wrapper">
+          
+          <!-- SINGLE INVOICE CONTAINER -->
+          <div id="invoice-template">
+            <!-- Printable A4 Invoice Sheet Container -->
+            <div class="a4-sheet invoice-page" id="printableA4Bill">
+              
+              <!-- Invoice Header -->
+              <header class="inv-header">
+                <div class="inv-brand-row">
+                  <div>
+                    <div class="inv-company-name">SURYA CRACKERS</div>
+                    <div class="inv-company-sub">Direct Sivakasi Crackers Manufacturer & Whole Seller</div>
+                    <div class="inv-company-contact">
+                      📍 3/1234/4C, Paraipatti Check Post, Viswanatham, Sivakasi - 626 189, Tamil Nadu<br>
+                      📞 Mobile: +91 97862 18428 / 96292 68023
+                    </div>
+                  </div>
+                  <div class="inv-badge-title">TAX INVOICE</div>
+                </div>
+
+                <div class="inv-meta-grid">
+                  <div class="inv-meta-block">
+                    <strong>BILL INFORMATION:</strong>
+                    <p><strong>Date:</strong> <span id="invSheetDate">25/09/2026</span></p>
+                    <p><strong>Payment Mode:</strong> <span id="invSheetPayMode">Cash</span></p>
+                  </div>
+                  <div class="inv-meta-block" style="text-align: right;">
+                    <strong>BILL DETAILS:</strong>
+                    <p><strong>Bill No:</strong> <span id="invSheetNo" style="font-family: monospace; font-weight: 700;">SURYA-2026-1001</span></p>
+                  </div>
+                </div>
+              </header>
+
+              <!-- Invoice Itemized Table -->
+              <div class="inv-table-wrapper">
+                <table class="inv-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 32px;" class="text-center">S.No</th>
+                      <th>Item Description</th>
+                      <th style="width: 80px;" class="text-center">Packing</th>
+                      <th style="width: 45px;" class="text-center">Qty</th>
+                      <th style="width: 70px;" class="text-right">Rate (₹)</th>
+                      <th style="width: 80px;" class="text-right">Amount (₹)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="invTableBody">
+                    <!-- Injected via JS - Only items with Qty > 0 -->
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Invoice Footer & Totals Section -->
+              <footer class="inv-footer-section invoice-footer">
+                <div class="inv-totals-grid">
+                  <div class="inv-words-box">
+                    <strong>Amount in Words:</strong>
+                    <span id="invAmountWords">Rupees Zero Only</span>
+                  </div>
+
+                  <div class="inv-amounts-box">
+                    <div class="amount-row">
+                      <span>Total MRP Price:</span>
+                      <span id="invSubTotalMrp">₹0</span>
+                    </div>
+                    <div class="amount-row savings">
+                      <span>Direct Factory Discount (80%):</span>
+                      <span id="invTotalSavings">- ₹0</span>
+                    </div>
+                    <div class="amount-row grand-total">
+                      <span>NET PAYABLE:</span>
+                      <span id="invNetPayable">₹0</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="inv-bottom-terms">
+                  <div>
+                    <strong style="color: #1e293b;">Terms & Conditions:</strong><br>
+                    1. Goods once sold will not be taken back or exchanged.<br>
+                    2. Store crackers in a cool, dry place away from flame.<br>
+                    3. Subject to Sivakasi Jurisdiction only.
+                  </div>
+                  <div class="signatory-box">
+                    <div>For <strong>Surya Crackers</strong></div>
+                    <div class="sign-line">Authorized Signatory</div>
+                  </div>
+                </div>
+              </footer>
+
+            </div>
+          </div>
+
+          <!-- ACTION BUTTONS BELOW A4 PREVIEW SHEET -->
+          <div class="preview-actions-bar">
+            <!-- Split Print Button Group with Dropdown -->
+            <div class="split-btn-container">
+              <button id="btnPrintBill" class="btn btn-success btn-lg split-main">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                Print Bill
+              </button>
+              <button id="btnPrintDropdownToggle" class="btn btn-success btn-lg split-arrow" aria-label="More Print Options" title="More Print Options">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+              <div id="printDropdownMenu" class="print-dropdown-menu hidden">
+                <button id="btnPrintOnly" class="print-dropdown-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                  <span>Print Only <small>(No Save / Sync)</small></span>
+                </button>
+              </div>
+            </div>
+            <button id="btnDownloadPDF" class="btn btn-primary btn-lg">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Download PDF
+            </button>
+            <button id="btnSalesHistory" class="btn btn-secondary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              Sales History
+            </button>
+            <button id="btnClearAll" class="btn btn-outline-danger">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              Clear All
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- SALES HISTORY MODAL POPUP OVERLAY                                    -->
+  <!-- ===================================================================== -->
+  <div id="salesHistoryModal" class="modal-overlay hidden">
+    <div class="modal-container history-modal-container">
+      <header class="modal-header">
+        <div class="modal-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          Sales & Order History
+        </div>
+        <button id="btnHistoryCloseCross" class="modal-close-btn">&times;</button>
+      </header>
+
+      <div class="modal-body history-modal-body">
+        <!-- Date Filter Toolbar -->
+        <div class="history-filter-bar">
+          <div class="form-group inline">
+            <label for="historyDateInput">Select Date:</label>
+            <input type="date" id="historyDateInput" class="form-input">
+          </div>
+          <div class="history-pills" id="historyFilterPills">
+            <button class="pill-btn active" data-range="all">All Time</button>
+            <button class="pill-btn" data-range="today">Today</button>
+            <button class="pill-btn" data-range="week">This Week</button>
+            <button class="pill-btn" data-range="month">This Month</button>
+          </div>
+        </div>
+
+        <!-- History Summary Bar -->
+        <div class="history-summary-bar">
+          <div class="history-summary-card">
+            <span class="history-card-label">Total Sales Count</span>
+            <span class="history-card-val" id="histTotalCount">0</span>
+          </div>
+          <div class="history-summary-card revenue">
+            <span class="history-card-label">Total Revenue</span>
+            <span class="history-card-val purple" id="histTotalRevenue">₹0</span>
+          </div>
+        </div>
+
+        <!-- History Table -->
+        <div class="history-table-wrapper">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Bill No</th>
+                <th>Date & Time</th>
+                <th class="text-center">Items Count</th>
+                <th>Payment Mode</th>
+                <th class="text-right">Total Amount (₹)</th>
+                <th class="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <footer class="modal-footer">
+        <button id="btnHistoryClose" class="btn btn-secondary btn-lg">Close History</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- JavaScript Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="products.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
