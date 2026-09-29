@@ -164,6 +164,62 @@ body {
   box-shadow: 0 0 0 2px rgba(123, 0, 234, 0.15);
 }
 
+/* Product Search Bar Container (Positioned above Category Filter Pills) */
+.search-bar-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.search-bar-container .search-icon {
+  position: absolute;
+  left: 0.75rem;
+  color: #64748b;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding-left: 2.3rem;
+  padding-right: 2.2rem;
+  font-size: 0.84rem;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 6px;
+  height: 36px;
+  transition: all 0.2s ease;
+  font-family: var(--font-body);
+}
+
+.search-input:focus {
+  border-color: var(--sivakasi-purple);
+  box-shadow: 0 0 0 3px rgba(123, 0, 234, 0.15);
+  outline: none;
+}
+
+.btn-clear-search {
+  position: absolute;
+  right: 0.5rem;
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0 0.4rem;
+  line-height: 1;
+  border-radius: 50%;
+  transition: color 0.15s;
+}
+
+.btn-clear-search:hover {
+  color: #0f172a;
+}
+
+.btn-clear-search.hidden {
+  display: none;
+}
+
 /* Category Filter Pills */
 .category-pills {
   display: flex;
@@ -919,6 +975,16 @@ body {
 }
 .btn-primary:hover {
   background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  transform: translateY(-1px);
+}
+
+.btn-info {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: white;
+  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25);
+}
+.btn-info:hover {
+  background: linear-gradient(135deg, #0369a1, #075985);
   transform: translateY(-1px);
 }
 
