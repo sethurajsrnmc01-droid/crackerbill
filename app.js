@@ -3,11 +3,14 @@
  * Pure Vanilla JavaScript Application Logic
  */
 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwrG_yNWNZ0iP7Ajp9G20_SSEj2D9ZJd-GIFyBYy4MLHTSElgITnHzr54ZFbCztDHP/exec";
+
 document.addEventListener('DOMContentLoaded', () => {
   // Application State
   const state = {
     cart: {}, // productId -> quantity
     activeCategory: 'ALL',
+    searchQuery: '',
     invoice: {
       date: getTodayDateString(),
       invoiceNo: generateInvoiceNumber(),
@@ -18,6 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // DOM Elements
   const orderTableBody = document.getElementById('orderTableBody');
   const categoryPillsContainer = document.getElementById('categoryPills');
+  const productSearchInput = document.getElementById('productSearchInput');
+  const btnClearSearch = document.getElementById('btnClearSearch');
   
   // Dynamic Stats Summary Elements
   const statTotalItems = document.getElementById('statTotalItems');
@@ -43,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Primary Action Buttons
   const btnPrintBill = document.getElementById('btnPrintBill');
   const btnDownloadPDF = document.getElementById('btnDownloadPDF');
+  const btnSharePDF = document.getElementById('btnSharePDF');
 
   // Sales History Modal Elements
   const salesHistoryModal = document.getElementById('salesHistoryModal');
@@ -65,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function init() {
     setupCategoryPills();
+    setupSearchListener();
     setupTopBarListeners();
     renderOrderTable();
     updateCalculations();
@@ -76,12 +83,14 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('online', syncOfflineBills);
     syncOfflineBills();
 
+    // Fetch and load next sequential bill number from Google Sheets backend
+    loadNextBillNumber();
+
     // Fetch and restore Sales History directly from Google Sheets if LocalStorage is empty
     fetchSalesHistoryFromSheets();
 
-    // Default today's date and bill number
+    // Default today's date
     if (invDateInput) invDateInput.value = state.invoice.date;
-    if (invNoInput) invNoInput.value = state.invoice.invoiceNo;
   }
 
   // Generate today's date formatted (YYYY-MM-DD)
@@ -162,6 +171,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Setup Product Search Input Listener
+  function setupSearchListener() {
+    if (!productSearchInput) return;
+
+    productSearchInput.addEventListener('input', (e) => {
+      const query = e.target.value.trim();
+      state.searchQuery = query;
+
+      if (btnClearSearch) {
+        if (query.length > 0) {
+          btnClearSearch.classList.remove('hidden');
+        } else {
+          btnClearSearch.classList.add('hidden');
+        }
+      }
+
+      renderOrderTable();
+    });
+
+    if (btnClearSearch) {
+      btnClearSearch.addEventListener('click', () => {
+        productSearchInput.value = '';
+        state.searchQuery = '';
+        btnClearSearch.classList.add('hidden');
+        renderOrderTable();
+        productSearchInput.focus();
+      });
+    }
+  }
+
   // Listen to Top Bar Changes (Date, Bill No & Payment Mode)
   function setupTopBarListeners() {
     if (invDateInput) {
@@ -202,17 +241,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Reset all item quantities, generate new unique Bill Number, and refresh UI
+  // Reset all item quantities, fetch new unique Bill Number, and refresh UI
   function resetFormForNewBill() {
     state.cart = {};
-    state.invoice.invoiceNo = generateInvoiceNumber();
     state.invoice.date = getTodayDateString();
     state.invoice.paymentMode = 'Cash';
 
     if (invDateInput) invDateInput.value = state.invoice.date;
-    if (invNoInput) invNoInput.value = state.invoice.invoiceNo;
     if (paymentModeInput) paymentModeInput.value = 'Cash';
 
+    // Load next sequential bill number from backend or local sequence
+    loadNextBillNumber();
     renderOrderTable();
     updateCalculations();
   }
@@ -238,13 +277,13 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        // 1. Record in Sales History & push to Google Sheets via doPost
-        saveCurrentInvoiceToHistory();
+        // 1. Record in Sales History & push to Google Sheets with "Print" action mode
+        saveInvoiceToSheet('Print');
 
         // 2. Open native print dialog
         window.print();
 
-        // 3. Auto-reset for new bill & generate new unique bill number
+        // 3. Auto-reset for new bill & fetch new unique bill number
         resetFormForNewBill();
         showToast('Bill printed & saved! Reset for new bill.');
       });
@@ -285,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        saveCurrentInvoiceToHistory();
+        saveInvoiceToSheet('Save Invoice');
         showToast('Invoice Saved Successfully!');
 
         // Clear billing screen and generate new bill number for next invoice
@@ -296,6 +335,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnDownloadPDF) {
       btnDownloadPDF.addEventListener('click', () => {
         downloadPDF();
+      });
+    }
+
+    if (btnSharePDF) {
+      btnSharePDF.addEventListener('click', () => {
+        sharePDF();
       });
     }
 
@@ -383,8 +428,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function sendToGoogleSheets(billData) {
-    let scriptURL = "AKfycbxwrG_yNWNZ0iP7Ajp9G20_SSEj2D9ZJd-GIFyBYy4MLHTSElgITnHzr54ZFbCztDHP";
+  // Fetch next sequential bill number from Google Sheets backend
+  function loadNextBillNumber() {
+    const localNext = generateInvoiceNumber();
+    state.invoice.invoiceNo = localNext;
+
+    const billNoInput = document.getElementById('billNoInput') || invNoInput;
+    if (invNoInput) invNoInput.value = localNext;
+    if (billNoInput) billNoInput.value = localNext;
+    if (invSheetNo) invSheetNo.textContent = localNext;
+
+    if (!navigator.onLine || !SCRIPT_URL) {
+      renderLiveInvoice();
+      return Promise.resolve(localNext);
+    }
+
+    const fetchUrl = SCRIPT_URL.includes('?') ? `${SCRIPT_URL}&action=getNextBillNo` : `${SCRIPT_URL}?action=getNextBillNo`;
+
+    return fetch(fetchUrl)
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to fetch next bill number');
+        return response.json();
+      })
+      .then(data => {
+        if (data && data.nextBillNo) {
+          state.invoice.invoiceNo = data.nextBillNo;
+          if (invNoInput) invNoInput.value = data.nextBillNo;
+          if (billNoInput) billNoInput.value = data.nextBillNo;
+          if (invSheetNo) invSheetNo.textContent = data.nextBillNo;
+          renderLiveInvoice();
+          return data.nextBillNo;
+        }
+        renderLiveInvoice();
+        return localNext;
+      })
+      .catch(error => {
+        console.warn('Could not fetch next bill number from Google Sheets, using local sequence:', error);
+        renderLiveInvoice();
+        return localNext;
+      });
+  }
+
+  function sendToGoogleSheets(billData, actionMode = 'Save Invoice') {
+    let scriptURL = SCRIPT_URL;
     if (!scriptURL.startsWith('http')) {
       scriptURL = 'https://script.google.com/macros/s/' + scriptURL + '/exec';
     }
@@ -397,7 +483,8 @@ document.addEventListener('DOMContentLoaded', () => {
       discount: billData.discountAmount !== undefined ? billData.discountAmount : (billData.totalSavings || 0),
       netAmount: billData.netAmount !== undefined ? billData.netAmount : (billData.netPayable || 0),
       totalItems: billData.totalItems !== undefined ? billData.totalItems : (billData.itemsCount !== undefined ? billData.itemsCount : (billData.items ? billData.items.length : 0)),
-      itemsSummary: billData.items ? billData.items.map(i => `${i.name} (x${i.qty})`).join(', ') : ''
+      itemsSummary: billData.itemsSummary || (billData.items ? billData.items.map(i => `${i.name} (x${i.qty})`).join(', ') : ''),
+      actionMode: actionMode || billData.actionMode || 'Save Invoice'
     };
 
     if (!navigator.onLine) {
@@ -416,7 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       body: JSON.stringify(payload)
     })
-    .then(() => console.log('Bill synced to Google Sheets successfully!'))
+    .then(() => console.log(`Bill synced to Google Sheets successfully with mode: ${payload.actionMode}`))
     .catch(error => {
       console.error('Error syncing to Google Sheets:', error);
       let queue = JSON.parse(localStorage.getItem('unsyncedBills')) || [];
@@ -525,12 +612,12 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   }
 
-  function saveToSalesHistory() {
-    return saveCurrentInvoiceToHistory();
+  function saveInvoiceToSheet(actionMode = 'Save Invoice') {
+    return saveCurrentInvoiceToHistory(actionMode);
   }
 
-  // Save current active invoice to localStorage sales history
-  function saveCurrentInvoiceToHistory() {
+  // Save current active invoice to localStorage sales history and push to Google Sheets
+  function saveCurrentInvoiceToHistory(actionMode = 'Save Invoice') {
     const selectedItems = [];
     let totalItems = 0;
     let totalActualMRP = 0;
@@ -556,16 +643,20 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    if (selectedItems.length === 0) return; // Do not save empty bills
+    if (selectedItems.length === 0) return null; // Do not save empty bills
 
     const totalSavings = totalActualMRP - netPayable;
     const now = new Date();
+    const billNo = state.invoice.invoiceNo || generateInvoiceNumber();
+    const dateTimeStr = `${formatDateForInvoice(state.invoice.date)} ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`.trim();
+    const itemsSummaryStr = selectedItems.map(i => `${i.name} (x${i.qty})`).join(', ');
 
     const historyRecord = {
-      id: state.invoice.invoiceNo || generateInvoiceNumber(),
-      billNo: state.invoice.invoiceNo || generateInvoiceNumber(),
+      id: billNo,
+      billNo: billNo,
       date: state.invoice.date,
       timestamp: now.toISOString(),
+      dateTime: dateTimeStr,
       displayDate: formatDateForInvoice(state.invoice.date),
       displayTime: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       paymentMode: state.invoice.paymentMode || 'Cash',
@@ -574,8 +665,11 @@ document.addEventListener('DOMContentLoaded', () => {
       totalMRP: totalActualMRP,
       totalSavings: totalSavings,
       discountAmount: totalSavings,
+      discount: totalSavings,
       netPayable: netPayable,
       netAmount: netPayable,
+      itemsSummary: itemsSummaryStr,
+      actionMode: actionMode,
       items: selectedItems,
       cart: JSON.parse(JSON.stringify(state.cart))
     };
@@ -595,8 +689,9 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Error saving sales history:', e);
     }
 
-    // Send bill data asynchronously to Google Sheets
-    sendToGoogleSheets(historyRecord);
+    // Send bill data asynchronously to Google Sheets with actionMode
+    sendToGoogleSheets(historyRecord, actionMode);
+    return historyRecord;
   }
 
   function renderSalesHistory() {
@@ -717,17 +812,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const invoiceTemplate = document.getElementById('invoice-template');
     if (!invoiceTemplate) return;
 
-    showToast('Generating Crackers_Invoice.pdf...');
+    let totalQty = 0;
+    Object.keys(state.cart).forEach(id => {
+      if (state.cart[id] > 0) totalQty += state.cart[id];
+    });
+
+    if (totalQty === 0) {
+      showToast('Cart is empty! Select items to download PDF.');
+      return;
+    }
+
+    // Save bill to Sales History & sync to Google Sheets with "PDF Download" action mode
+    saveInvoiceToSheet('PDF Download');
+    renderSalesHistory();
+
+    const currentBillNo = state.invoice.invoiceNo || 'bill';
+    showToast(`Generating Crackers_Invoice_${currentBillNo}.pdf...`);
 
     if (typeof html2pdf === 'undefined') {
       window.print();
+      resetFormForNewBill();
       return;
     }
 
     const generate = () => {
       const opt = {
         margin:       [4, 4, 4, 4],
-        filename:     'Crackers_Invoice.pdf',
+        filename:     `Crackers_Invoice_${currentBillNo}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { 
           scale: 2, 
@@ -741,10 +852,12 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       html2pdf().set(opt).from(invoiceTemplate).save().then(() => {
-        showToast('PDF downloaded successfully!');
+        showToast(`Invoice ${currentBillNo} downloaded! Updated for new bill.`);
+        resetFormForNewBill();
       }).catch(err => {
         console.error('PDF export error:', err);
         window.print();
+        resetFormForNewBill();
       });
     };
 
@@ -753,6 +866,107 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       generate();
     }
+  }
+
+  // Share PDF Function - Native Web Share API with Sales History saving
+  function sharePDF() {
+    const invoiceTemplate = document.getElementById('invoice-template');
+    if (!invoiceTemplate) return;
+
+    let totalQty = 0;
+    Object.keys(state.cart).forEach(id => {
+      if (state.cart[id] > 0) totalQty += state.cart[id];
+    });
+
+    if (totalQty === 0) {
+      showToast('Cart is empty! Select items to share PDF.');
+      return;
+    }
+
+    // Save bill to Sales History & sync to Google Sheets with "Share" action mode
+    saveInvoiceToSheet('Share');
+    renderSalesHistory();
+
+    const currentBillNo = state.invoice.invoiceNo || 'Bill';
+    showToast('Preparing PDF for sharing...');
+
+    if (typeof html2pdf === 'undefined') {
+      showToast('PDF generator library not loaded.');
+      return;
+    }
+
+    const filename = `Crackers_Invoice_${currentBillNo}.pdf`;
+    const opt = {
+      margin:       [4, 4, 4, 4],
+      filename:     filename,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, logging: false, scrollY: 0, scrollX: 0 },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak:    { mode: ['css', 'legacy'] }
+    };
+
+    html2pdf().set(opt).from(invoiceTemplate).toPdf().get('pdf').then(async (pdf) => {
+      const pdfBlob = pdf.output('blob');
+      const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
+
+      let sharedSuccess = false;
+
+      if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+        try {
+          await navigator.share({
+            files: [pdfFile]
+          });
+          showToast(`PDF for Invoice ${currentBillNo} shared! Invoice number updated.`);
+          sharedSuccess = true;
+        } catch (shareErr) {
+          if (shareErr.name !== 'AbortError') {
+            console.error('File share error:', shareErr);
+            triggerFallbackShare(pdfBlob, filename);
+            sharedSuccess = true;
+          }
+        }
+      } else if (navigator.share && navigator.canShare) {
+        try {
+          await navigator.share({
+            files: [pdfFile]
+          });
+          showToast(`PDF for Invoice ${currentBillNo} shared! Invoice number updated.`);
+          sharedSuccess = true;
+        } catch (shareErr) {
+          if (shareErr.name !== 'AbortError') {
+            triggerFallbackShare(pdfBlob, filename);
+            sharedSuccess = true;
+          }
+        }
+      } else {
+        triggerFallbackShare(pdfBlob, filename);
+        sharedSuccess = true;
+      }
+
+      if (sharedSuccess) {
+        resetFormForNewBill();
+      }
+    }).catch(err => {
+      console.error('PDF export error for share:', err);
+      showToast('Error preparing PDF for sharing.');
+    });
+  }
+
+  function triggerFallbackShare(pdfBlob, filename) {
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(pdfBlob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('PDF downloaded!');
+  }
+
+  function escapeHTML(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, function(m) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+    });
   }
 
   // Load Preset Demo Order Data
@@ -769,16 +983,32 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('Loaded sample Sivakasi order!');
   }
 
-  // Render Interactive Crackers Table with ITEM CODE
+  // Render Interactive Crackers Table with ITEM CODE & Search Filtering
   function renderOrderTable() {
     if (!orderTableBody) return;
 
     let rowsHTML = '';
+    let totalVisibleItems = 0;
+    const query = (state.searchQuery || '').toLowerCase().trim();
 
     CRACKERS_CATALOG.forEach(cat => {
       if (state.activeCategory !== 'ALL' && state.activeCategory !== cat.category) {
         return;
       }
+
+      // Filter items matching search query
+      const matchingItems = cat.items.filter(item => {
+        if (!query) return true;
+        const codeMatch = (item.code || '').toLowerCase().includes(query);
+        const nameMatch = (item.name || '').toLowerCase().includes(query);
+        const tamilMatch = (item.tamilName || '').toLowerCase().includes(query);
+        const catMatch = (cat.category || '').toLowerCase().includes(query);
+        return codeMatch || nameMatch || tamilMatch || catMatch;
+      });
+
+      if (matchingItems.length === 0) return;
+
+      totalVisibleItems += matchingItems.length;
 
       rowsHTML += `
         <tr class="category-banner-row">
@@ -791,7 +1021,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </tr>
       `;
 
-      cat.items.forEach(item => {
+      matchingItems.forEach(item => {
         const qty = state.cart[item.id] || 0;
         const total = qty * item.price;
         const hasQtyClass = qty > 0 ? 'has-qty' : '';
@@ -826,6 +1056,17 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
       });
     });
+
+    if (totalVisibleItems === 0) {
+      rowsHTML = `
+        <tr class="history-empty-row">
+          <td colspan="6" style="padding: 2.5rem 1rem; text-align: center; color: #64748b; font-size: 0.95rem;">
+            🔍 No crackers found matching "<strong>${escapeHTML(state.searchQuery)}</strong>"<br>
+            <span style="font-size: 0.82rem; color: #94a3b8;">Try searching by item code (e.g. SPK-01), English name, or Tamil description.</span>
+          </td>
+        </tr>
+      `;
+    }
 
     orderTableBody.innerHTML = rowsHTML;
     attachTableListeners();
