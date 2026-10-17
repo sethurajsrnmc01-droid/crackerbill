@@ -8,20 +8,20 @@ const CRACKERS_CATALOG = [
   {
     category: "ONE SOUND CRACKERS",
     items: [
-      { id: "surya-1", code: "1", name: "4\" Lakshmi", tamilName: "4\" லட்சுமி", unit: "1 Pkt", mrp: 90, price: 18 },
+      { id: "surya-1", code: "1", name: "4\" Lakshmi", tamilName: "4\" லட்சுமி", unit: "1 Pkt", mrp: 90, price: 20 },
       { id: "surya-2", code: "2", name: "3½\" Lakshmi", tamilName: "3½\" லட்சுமி", unit: "1 Pkt", mrp: 80, price: 16 },
       { id: "surya-3", code: "3", name: "2¾\" Kuruvi", tamilName: "2¾\" குருவி", unit: "1 Pkt", mrp: 35, price: 7 },
       { id: "surya-4", code: "4", name: "4\" Deluxe Lakshmi", tamilName: "4\" டீலக்ஸ் லட்சுமி", unit: "1 Pkt", mrp: 150, price: 30 },
       { id: "surya-5", code: "5", name: "4\" Gold Lakshmi", tamilName: "4\" கோல்டு லட்சுமி", unit: "1 Pkt", mrp: 160, price: 32 },
       { id: "surya-6", code: "6", name: "2 Sound Crackers", tamilName: "2 சவுண்ட்", unit: "1 Pkt", mrp: 200, price: 40 },
       { id: "surya-7", code: "7", name: "5\" Lakshmi", tamilName: "5\" லட்சுமி", unit: "1 Pkt", mrp: 250, price: 50 },
-      { id: "surya-8", code: "8", name: "6\" Lakshmi", tamilName: "6\" லட்சுமி", unit: "1 Pkt", mrp: 275, price: 55 }
+      { id: "surya-8", code: "8", name: "6\" Lakshmi", tamilName: "6\" லட்சுமி", unit: "1 Pkt", mrp: 275, price: 60 }
     ]
   },
   {
     category: "GROUND CHAKKERS",
     items: [
-      { id: "surya-9", code: "9", name: "Ground Chakker Big (10 Pcs)", tamilName: "தரைச்சக்கரம் பிக் (10 Pcs)", unit: "1 Box", mrp: 200, price: 50 },
+      { id: "surya-9", code: "9", name: "Ground Chakker Big (10 Pcs)", tamilName: "தரைச்சக்கரம் பிக் (10 Pcs)", unit: "1 Box", mrp: 200, price: 60 },
       { id: "surya-10", code: "10", name: "Ground Chakker Special", tamilName: "தரைச்சக்கரம் ஸ்பெஷல்", unit: "1 Box", mrp: 400, price: 80 },
       { id: "surya-11", code: "11", name: "Ground Chakker Deluxe", tamilName: "தரைச்சக்கரம் டீலக்ஸ்", unit: "1 Box", mrp: 750, price: 150 },
       { id: "surya-12", code: "12", name: "Spinner SPL(Plastic)", tamilName: "ஸ்பின்னர் ஸ்பெஷல்", unit: "1 Box", mrp: 800, price: 160 },
@@ -40,8 +40,8 @@ const CRACKERS_CATALOG = [
     category: "FLOWER POTS",
     items: [
       { id: "surya-22", code: "22", name: "Flower Pot Big", tamilName: "பூச்சட்டி பெரியது", unit: "1 Box", mrp: 350, price: 70 },
-      { id: "surya-23", code: "23", name: "Flower Pot Special", tamilName: "பூச்சட்டி ஸ்பெஷல்", unit: "1 Box", mrp: 550, price: 110 },
-      { id: "surya-24", code: "24", name: "Flower Pot Asoka", tamilName: "பூச்சட்டி அசோகா", unit: "1 Box", mrp: 600, price: 120 },
+      { id: "surya-23", code: "23", name: "Flower Pot Special", tamilName: "பூச்சட்டி ஸ்பெஷல்", unit: "1 Box", mrp: 550, price: 120 },
+      { id: "surya-24", code: "24", name: "Flower Pot Asoka", tamilName: "பூச்சட்டி அசோகா", unit: "1 Box", mrp: 600, price: 150 },
       { id: "surya-25", code: "25", name: "Flower Pot Deluxe", tamilName: "பூச்சட்டி டீலக்ஸ்", unit: "1 Box", mrp: 1000, price: 200 },
       { id: "surya-26", code: "26", name: "Flower Pot Super Deluxe (2 Pcs)", tamilName: "பூச்சட்டி சூப்பர் டீலக்ஸ்", unit: "1 Box", mrp: 750, price: 150 },
       { id: "surya-27", code: "27", name: "Colour Koti", tamilName: "கலர் கோட்டி", unit: "1 Box", mrp: 1000, price: 200 },
@@ -61,8 +61,8 @@ const CRACKERS_CATALOG = [
   {
     category: "TWINKLIKNG STAR / PENCIL / CANDLE",
     items: [
-      { id: "surya-34", code: "34", name: "1½” Twinkling Star", tamilName: "1½” ட்விங்க்ளிங் ஸ்டார்", unit: "1 Box", mrp: 150, price: 30 },
-      { id: "surya-35", code: "35", name: "4” Twinkling Star", tamilName: "4” ட்விங்க்ளிங் ஸ்டார்", unit: "1 Box", mrp: 350, price: 70 },
+      { id: "surya-34", code: "34", name: "1½” Twinkling Star", tamilName: "1½” ட்விங்க்ளிங் ஸ்டார்", unit: "1 Box", mrp: 150, price: 35 },
+      { id: "surya-35", code: "35", name: "4” Twinkling Star", tamilName: "4” ட்விங்க்ளிங் ஸ்டார்", unit: "1 Box", mrp: 350, price: 80 },
       { id: "surya-36", code: "36", name: "SELFI STICK (3 Pcs)", tamilName: "செல்ஃபி ஸ்டிக் (3 Pcs)", unit: "1 Box", mrp: 400, price: 80 },
       { id: "surya-37", code: "37", name: "Colour Smoke (3 Pcs)", tamilName: "கலர் ஸ்மோக் (3 Pcs)", unit: "1 Box", mrp: 750, price: 150 }
     ]
@@ -72,7 +72,7 @@ const CRACKERS_CATALOG = [
     items: [
       { id: "surya-38", code: "38", name: "Rocket Bomb", tamilName: "ராக்கெட் பாம்", unit: "1 Box", mrp: 325, price: 65 },
       { id: "surya-39", code: "39", name: "Lunik Rocket", tamilName: "லூனிக் ராக்கெட்", unit: "1 Box", mrp: 600, price: 120 },
-      { id: "surya-40", code: "40", name: "2 Sound Rocket", tamilName: "2 சவுண்ட் ராக்கெட்", unit: "1 Box", mrp: 650, price: 130 },
+      { id: "surya-40", code: "40", name: "2 Sound Rocket", tamilName: "2 சவுண்ட் ராக்கெட்", unit: "1 Box", mrp: 650, price: 140 },
       { id: "surya-41", code: "41", name: "3 Sound Rocket", tamilName: "3 சவுண்ட் ராக்கெட்", unit: "1 Box", mrp: 700, price: 140 },
       { id: "surya-42", code: "42", name: "Whistling Rocket", tamilName: "விசிலிங் ராக்கெட்", unit: "1 Box", mrp: 1250, price: 250 }
     ]
@@ -82,7 +82,7 @@ const CRACKERS_CATALOG = [
     items: [
       { id: "surya-43", code: "43", name: "Bullet Bomb", tamilName: "புல்லட் பாம்", unit: "1 Box", mrp: 150, price: 30 },
       { id: "surya-44", code: "44", name: "Hydrogen Bomb", tamilName: "ஹைட்ரஜன் பாம்", unit: "1 Box", mrp: 350, price: 70 },
-      { id: "surya-45", code: "45", name: "Classic Bomb", tamilName: "கிளாசிக் பாம்", unit: "1 Box", mrp: 550, price: 110 },
+      { id: "surya-45", code: "45", name: "Classic Bomb", tamilName: "கிளாசிக் பாம்", unit: "1 Box", mrp: 550, price: 150 },
       { id: "surya-46", code: "46", name: "Jurassic Bomb", tamilName: "ஜுராசிக் பாம்", unit: "1 Box", mrp: 1250, price: 250 },
       { id: "surya-47", code: "47", name: "Royal Bomb", tamilName: "ராயல் பாம்", unit: "1 Box", mrp: 2000, price: 400 },
       { id: "surya-48", code: "48", name: "Newton Bomb", tamilName: "நியூட்டன் பாம்", unit: "1 Box", mrp: 1500, price: 300 },
@@ -91,7 +91,8 @@ const CRACKERS_CATALOG = [
       { id: "surya-51", code: "51", name: "Newton Bomb Deluxe", tamilName: "நியூட்டன் பாம்", unit: "1 Box", mrp: 1500, price: 300 },
       { id: "surya-52", code: "52", name: "¼ Kg", tamilName: "¼ கிலோ", unit: "1 Box", mrp: 250, price: 50 },
       { id: "surya-53", code: "53", name: "½ Kg", tamilName: "½ கிலோ", unit: "1 Box", mrp: 500, price: 100 },
-      { id: "surya-54", code: "54", name: "1 Kg", tamilName: "1 கிலோ", unit: "1 Box", mrp: 1000, price: 200 }
+      { id: "surya-54", code: "54", name: "1 Kg", tamilName: "1 கிலோ", unit: "1 Box", mrp: 1000, price: 200 },
+      { id: "surya-181", code: "181", name: "King of Kind", tamilName: "கிங் ஆப் கிங்", unit: "1 Box", mrp: 600, price: 120 }
     ]
   },
   {
@@ -107,8 +108,8 @@ const CRACKERS_CATALOG = [
   {
     category: "GARLAND MINI",
     items: [
-      { id: "surya-60", code: "60", name: "28 Chorsa", tamilName: "28 சோர்சா", unit: "1 Pkt", mrp: 90, price: 18 },
-      { id: "surya-61", code: "61", name: "28 Giant", tamilName: "28 ஜெயண்ட்", unit: "1 Pkt", mrp: 125, price: 25 },
+      { id: "surya-60", code: "60", name: "28 Chorsa", tamilName: "28 சோர்சா", unit: "1 Pkt", mrp: 90, price: 20 },
+      { id: "surya-61", code: "61", name: "28 Giant", tamilName: "28 ஜெயண்ட்", unit: "1 Pkt", mrp: 125, price: 30 },
       { id: "surya-62", code: "62", name: "56 Giant", tamilName: "56 ஜெயண்ட்", unit: "1 Pkt", mrp: 250, price: 50 },
       { id: "surya-63", code: "63", name: "24 Deluxe", tamilName: "24 டீலக்ஸ்", unit: "1 Pkt", mrp: 300, price: 60 }
     ]
@@ -130,8 +131,8 @@ const CRACKERS_CATALOG = [
   {
     category: "MULTICOLOUR SHOTS",
     items: [
-      { id: "surya-73", code: "73", name: "7 Shots", tamilName: "7 ஷாட்ஸ்", unit: "1 Box", mrp: 500, price: 100 },
-      { id: "surya-74", code: "74", name: "Penta (5 Pcs)", tamilName: "பென்டா (5 Pcs)", unit: "1 Box", mrp: 600, price: 120 },
+      { id: "surya-73", code: "73", name: "7 Shots", tamilName: "7 ஷாட்ஸ்", unit: "1 Box", mrp: 500, price: 120 },
+      { id: "surya-74", code: "74", name: "Penta (5 Pcs)", tamilName: "பென்டா (5 Pcs)", unit: "1 Box", mrp: 600, price: 180 },
       { id: "surya-75", code: "75", name: "12 Shots Rider", tamilName: "12 ஷாட்ஸ் ரைடர்", unit: "1 Box", mrp: 900, price: 180 },
       { id: "surya-76", code: "76", name: "15 Shots Multicolour", tamilName: "15 ஷாட்ஸ் மல்டிகலர்", unit: "1 Box", mrp: 1250, price: 250 },
       { id: "surya-77", code: "77", name: "25 Shots Rider", tamilName: "25 ஷாட்ஸ் ரைடர்", unit: "1 Box", mrp: 1250, price: 250 },
@@ -196,17 +197,17 @@ const CRACKERS_CATALOG = [
       { id: "surya-121", code: "121", name: "Money Bank (2Pcs)", tamilName: "மணி பேங்க் (2 Pcs)", unit: "1 Box", mrp: 1000, price: 200 },
       { id: "surya-122", code: "122", name: "Tin Beer", tamilName: "டின் பீர்", unit: "1 Box", mrp: 500, price: 100 },
       { id: "surya-123", code: "123", name: "Helicopter", tamilName: "ஹெலிகாப்டர்", unit: "1 Box", mrp: 600, price: 120 },
-      { id: "surya-124", code: "124", name: "Siren (2 Pc)", tamilName: "சைரன் (2 Pc)", unit: "1 Box", mrp: 1250, price: 250 },
-      { id: "surya-125", code: "125", name: "Mini Siren", tamilName: "மினி சைரன்", unit: "1 Box", mrp: 600, price: 120 },
+      { id: "surya-124", code: "124", name: "Siren (2 Pc)", tamilName: "சைரன் (2 Pc)", unit: "1 Box", mrp: 1250, price: 200 },
+      { id: "surya-125", code: "125", name: "Mini Siren", tamilName: "மினி சைரன்", unit: "1 Box", mrp: 600, price: 150 },
       { id: "surya-126", code: "126", name: "Mega Siren", tamilName: "மெகா சைரன்", unit: "1 Box", mrp: 1250, price: 250 },
       { id: "surya-127", code: "127", name: "Double Blast Gun (2Pcs)", tamilName: "டபிள் பிளாஸ்ட் கன் (2 Pcs)", unit: "1 Box", mrp: 1100, price: 220 },
       { id: "surya-128", code: "128", name: "Fire EGG (2 Pcs)", tamilName: "ஃபயர் எக் (2 Pcs)", unit: "1 Box", mrp: 1250, price: 250 },
-      { id: "surya-129", code: "129", name: "Photo Flash", tamilName: "போட்டோ ஃபிளாஷ்", unit: "1 Box", mrp: 250, price: 50 },
+      { id: "surya-129", code: "129", name: "Photo Flash", tamilName: "போட்டோ ஃபிளாஷ்", unit: "1 Box", mrp: 250, price: 70 },
       { id: "surya-130", code: "130", name: "Bat", tamilName: "பேட்", unit: "1 Box", mrp: 1100, price: 220 },
       { id: "surya-131", code: "131", name: "Royal Lap Top Match Box", tamilName: "ராயல் லேப் டாப் மேட்ச் பாக்ஸ்", unit: "1 Box", mrp: 1250, price: 250 },
       { id: "surya-132", code: "132", name: "Mega Deluxe", tamilName: "மெகா டீலக்ஸ்", unit: "1 Box", mrp: 1150, price: 230 },
-      { id: "surya-133", code: "133", name: "I Cone", tamilName: "ஐ கோன்", unit: "1 Box", mrp: 1500, price: 300 },
-      { id: "surya-134", code: "134", name: "Naughty Boy", tamilName: "நாட்டி பாய்", unit: "1 Box", mrp: 175, price: 35 },
+      { id: "surya-133", code: "133", name: "I Cone", tamilName: "ஐ கோன்", unit: "1 Box", mrp: 1500, price: 250 },
+      { id: "surya-134", code: "134", name: "Naughty Boy", tamilName: "நாட்டி பாய்", unit: "1 Box", mrp: 175, price: 50 },
       { id: "surya-135", code: "135", name: "90 Watts", tamilName: "90 வாட்ஸ்", unit: "1 Box", mrp: 750, price: 150 },
       { id: "surya-136", code: "136", name: "Butterfly", tamilName: "வண்ணத்துப்பூச்சி", unit: "1 Box", mrp: 600, price: 120 },
       { id: "surya-137", code: "137", name: "Water Melon", tamilName: "வாட்டர் மெலன்", unit: "1 Box", mrp: 1000, price: 200 }
@@ -216,14 +217,14 @@ const CRACKERS_CATALOG = [
     category: "Raj Kala F/W",
     items: [
       { id: "surya-138", code: "138", name: "Tom & Jerry", tamilName: "டாம் & ஜெர்ரி", unit: "1 Box", mrp: 250, price: 50 },
-      { id: "surya-139", code: "139", name: "X - Mas", tamilName: "எக்ஸ் - மாஸ்", unit: "1 Box", mrp: 925, price: 185 },
+      { id: "surya-139", code: "139", name: "X - Mas", tamilName: "எக்ஸ் - மாஸ்", unit: "1 Box", mrp: 925, price: 180 },
       { id: "surya-140", code: "140", name: "Red Bloom", tamilName: "ரெட் ப்ளூம்", unit: "1 Box", mrp: 1300, price: 260 },
-      { id: "surya-141", code: "141", name: "Paris Tower", tamilName: "பாரிஸ் டவர்", unit: "1 Box", mrp: 850, price: 170 },
+      { id: "surya-141", code: "141", name: "Paris Tower", tamilName: "பாரிஸ் டவர்", unit: "1 Box", mrp: 850, price: 150 },
       { id: "surya-142", code: "142", name: "Violet Matrix", tamilName: "வயலட் மேட்ரிக்ஸ்", unit: "1 Box", mrp: 3000, price: 600 },
       { id: "surya-143", code: "143", name: "Sea Laser", tamilName: "ஸீ லேசர்", unit: "1 Box", mrp: 900, price: 180 },
-      { id: "surya-144", code: "144", name: "Amazing Pencil", tamilName: "அமேசிங் பென்சில்", unit: "1 Box", mrp: 500, price: 50 },
-      { id: "surya-145", code: "145", name: "Money Bank Small", tamilName: "மணி பேங்க் ஸ்மால்", unit: "1 Box", mrp: 250, price: 50 },
-      { id: "surya-146", code: "146", name: "Scoobydoo", tamilName: "ஸ்கூபிடூ", unit: "1 Box", mrp: 450, price: 90 },
+      { id: "surya-144", code: "144", name: "Amazing Pencil", tamilName: "அமேசிங் பென்சில்", unit: "1 Box", mrp: 500, price: 80 },
+      { id: "surya-145", code: "145", name: "Money Bank 3 pc", tamilName: "மணி பேங்க் (3 Pc)", unit: "1 Box", mrp: 750, price: 150 },
+      { id: "surya-146", code: "146", name: "Scoobydoo", tamilName: "ஸ்கூபிடூ", unit: "1 Box", mrp: 450, price: 80 },
       { id: "surya-147", code: "147", name: "Wonders - 3", tamilName: "வொண்டர் - 3", unit: "1 Box", mrp: 1350, price: 270 },
       { id: "surya-148", code: "148", name: "Rain & Shin", tamilName: "ரெயின் & ஷைன்", unit: "1 Box", mrp: 1600, price: 320 }
     ]
