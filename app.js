@@ -14,7 +14,10 @@ document.addEventListener('DOMContentLoaded', () => {
     invoice: {
       date: getTodayDateString(),
       invoiceNo: generateInvoiceNumber(),
-      paymentMode: 'Cash'
+      paymentMode: 'Cash',
+      customerName: '',
+      customerPhone: '',
+      customerAddress: ''
     }
   };
 
@@ -34,6 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const invDateInput = document.getElementById('invDate');
   const invNoInput = document.getElementById('invNoInput');
   const paymentModeInput = document.getElementById('paymentMode');
+  const custNameInput = document.getElementById('custName');
+  const custPhoneInput = document.getElementById('custPhone');
+  const custAddressInput = document.getElementById('custAddress');
 
   // Live Invoice Sheet Elements
   const invSheetNo = document.getElementById('invSheetNo');
@@ -151,12 +157,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // Build Category Pill Buttons
   function setupCategoryPills() {
     if (!categoryPillsContainer) return;
+    const catalog = (typeof CRACKERS_CATALOG !== 'undefined' && Array.isArray(CRACKERS_CATALOG)) ? CRACKERS_CATALOG : [];
     
     let html = `<button class="pill-btn active" data-category="ALL">💥 ALL CATEGORIES</button>`;
     
-    CRACKERS_CATALOG.forEach(cat => {
-      const shortName = cat.category.split('/')[0].trim();
-      html += `<button class="pill-btn" data-category="${cat.category}">${shortName}</button>`;
+    catalog.forEach(cat => {
+      if (cat && cat.category) {
+        const shortName = cat.category.split('/')[0].trim();
+        html += `<button class="pill-btn" data-category="${cat.category}">${shortName}</button>`;
+      }
     });
     
     categoryPillsContainer.innerHTML = html;
@@ -176,7 +185,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!productSearchInput) return;
 
     productSearchInput.addEventListener('input', (e) => {
-      const query = e.target.value.trim();
+      const rawVal = (e.target && e.target.value !== undefined && e.target.value !== null) ? e.target.value : '';
+      const query = rawVal.toString().trim();
       state.searchQuery = query;
 
       if (btnClearSearch) {
@@ -201,7 +211,63 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Listen to Top Bar Changes (Date, Bill No & Payment Mode)
+  // Indian Mobile Phone Number Rule Validator
+  // Rule: Optional, but if entered: only numeric 0-9, starts with 6, 7, 8, or 9, exactly 10 digits
+  function validatePhoneNumber(phone) {
+    const raw = String(phone || '').trim();
+    const clean = raw.replace(/\D/g, '');
+    // Phone number is optional - valid if left completely empty
+    if (!clean) {
+      return { valid: true, cleanPhone: '', isEmpty: true };
+    }
+    if (!/^[6-9]/.test(clean)) {
+      return { valid: false, message: 'Mobile number must start with 6, 7, 8, or 9.' };
+    }
+    if (clean.length !== 10) {
+      return { valid: false, message: `Mobile number must be exactly 10 digits (currently ${clean.length} digits).` };
+    }
+    return { valid: true, cleanPhone: clean, isEmpty: false };
+  }
+
+  function updatePhoneValidationUI(digits) {
+    const hint = document.getElementById('phoneErrorHint');
+    if (!custPhoneInput) return;
+
+    // Optional field: if empty, remove any error or valid classes
+    if (!digits) {
+      custPhoneInput.classList.remove('input-error', 'input-valid');
+      if (hint) {
+        hint.textContent = '';
+        hint.className = 'phone-error-hint hidden';
+      }
+      return;
+    }
+
+    if (!/^[6-9]/.test(digits)) {
+      custPhoneInput.classList.add('input-error');
+      custPhoneInput.classList.remove('input-valid');
+      if (hint) {
+        hint.textContent = '⚠️ Must start with 6, 7, 8, or 9';
+        hint.className = 'phone-error-hint error';
+      }
+    } else if (digits.length < 10) {
+      custPhoneInput.classList.add('input-error');
+      custPhoneInput.classList.remove('input-valid');
+      if (hint) {
+        hint.textContent = `⚠️ Enter 10 digits (${digits.length}/10)`;
+        hint.className = 'phone-error-hint error';
+      }
+    } else {
+      custPhoneInput.classList.remove('input-error');
+      custPhoneInput.classList.add('input-valid');
+      if (hint) {
+        hint.textContent = '✓ Valid 10-digit mobile number';
+        hint.className = 'phone-error-hint success';
+      }
+    }
+  }
+
+  // Listen to Top Bar Changes (Date, Bill No, Payment Mode & Customer Details)
   function setupTopBarListeners() {
     if (invDateInput) {
       invDateInput.addEventListener('change', (e) => {
@@ -221,22 +287,67 @@ document.addEventListener('DOMContentLoaded', () => {
         renderLiveInvoice();
       });
     }
+    if (custNameInput) {
+      custNameInput.addEventListener('input', (e) => {
+        state.invoice.customerName = e.target.value;
+        renderLiveInvoice();
+      });
+    }
+    if (custPhoneInput) {
+      custPhoneInput.addEventListener('input', (e) => {
+        // Enforce phone number rule: only digits 0-9, strip country code 91 if 12 digits, max 10 digits
+        let digits = e.target.value.replace(/\D/g, '');
+        if (digits.length === 12 && digits.startsWith('91')) {
+          digits = digits.slice(2);
+        }
+        digits = digits.slice(0, 10);
+        e.target.value = digits;
+        state.invoice.customerPhone = digits;
+
+        updatePhoneValidationUI(digits);
+        renderLiveInvoice();
+      });
+
+      custPhoneInput.addEventListener('blur', () => {
+        updatePhoneValidationUI(state.invoice.customerPhone);
+      });
+    }
+    if (custAddressInput) {
+      custAddressInput.addEventListener('input', (e) => {
+        state.invoice.customerAddress = e.target.value;
+        renderLiveInvoice();
+      });
+    }
   }
 
   // Action Button Handlers
   function setupEventListeners() {
     if (btnClear) {
       btnClear.addEventListener('click', () => {
-        if (Object.keys(state.cart).length === 0) {
-          showToast('Cart is already empty!');
+        if (Object.keys(state.cart).length === 0 && !state.invoice.customerName && !state.invoice.customerPhone && !state.invoice.customerAddress) {
+          showToast('Cart and customer details are already empty!');
           return;
         }
         state.cart = {};
         state.invoice.invoiceNo = generateInvoiceNumber(); // Generate fresh sequential bill no
+        state.invoice.customerName = '';
+        state.invoice.customerPhone = '';
+        state.invoice.customerAddress = '';
         if (invNoInput) invNoInput.value = state.invoice.invoiceNo;
+        if (custNameInput) custNameInput.value = '';
+        if (custPhoneInput) {
+          custPhoneInput.value = '';
+          custPhoneInput.classList.remove('input-error', 'input-valid');
+        }
+        const hint = document.getElementById('phoneErrorHint');
+        if (hint) {
+          hint.textContent = '';
+          hint.className = 'phone-error-hint hidden';
+        }
+        if (custAddressInput) custAddressInput.value = '';
         renderOrderTable();
         updateCalculations();
-        showToast('All quantities reset & new bill created!');
+        showToast('All quantities & customer details reset! New bill created.');
       });
     }
   }
@@ -246,9 +357,23 @@ document.addEventListener('DOMContentLoaded', () => {
     state.cart = {};
     state.invoice.date = getTodayDateString();
     state.invoice.paymentMode = 'Cash';
+    state.invoice.customerName = '';
+    state.invoice.customerPhone = '';
+    state.invoice.customerAddress = '';
 
     if (invDateInput) invDateInput.value = state.invoice.date;
     if (paymentModeInput) paymentModeInput.value = 'Cash';
+    if (custNameInput) custNameInput.value = '';
+    if (custPhoneInput) {
+      custPhoneInput.value = '';
+      custPhoneInput.classList.remove('input-error', 'input-valid');
+    }
+    const hint = document.getElementById('phoneErrorHint');
+    if (hint) {
+      hint.textContent = '';
+      hint.className = 'phone-error-hint hidden';
+    }
+    if (custAddressInput) custAddressInput.value = '';
 
     // Load next sequential bill number from backend or local sequence
     loadNextBillNumber();
@@ -277,6 +402,15 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
+        // Phone Number Rule Validation
+        const phoneCheck = validatePhoneNumber(state.invoice.customerPhone);
+        if (!phoneCheck.valid) {
+          showToast(`⚠️ ${phoneCheck.message}`);
+          updatePhoneValidationUI(state.invoice.customerPhone);
+          if (custPhoneInput) custPhoneInput.focus();
+          return;
+        }
+
         // 1. Record in Sales History & push to Google Sheets with "Print" action mode
         saveInvoiceToSheet('Print');
 
@@ -292,6 +426,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnPrintOnly) {
       btnPrintOnly.addEventListener('click', () => {
         if (printDropdownMenu) printDropdownMenu.classList.add('hidden');
+
+        // Phone Number Rule Validation
+        const phoneCheck = validatePhoneNumber(state.invoice.customerPhone);
+        if (!phoneCheck.valid) {
+          showToast(`⚠️ ${phoneCheck.message}`);
+          updatePhoneValidationUI(state.invoice.customerPhone);
+          if (custPhoneInput) custPhoneInput.focus();
+          return;
+        }
+
         window.print();
       });
     }
@@ -321,6 +465,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (totalQty === 0) {
           showToast('Cart is empty! Select items to save invoice.');
+          return;
+        }
+
+        // Phone Number Rule Validation
+        const phoneCheck = validatePhoneNumber(state.invoice.customerPhone);
+        if (!phoneCheck.valid) {
+          showToast(`⚠️ ${phoneCheck.message}`);
+          updatePhoneValidationUI(state.invoice.customerPhone);
+          if (custPhoneInput) custPhoneInput.focus();
           return;
         }
 
@@ -484,7 +637,13 @@ document.addEventListener('DOMContentLoaded', () => {
       netAmount: billData.netAmount !== undefined ? billData.netAmount : (billData.netPayable || 0),
       totalItems: billData.totalItems !== undefined ? billData.totalItems : (billData.itemsCount !== undefined ? billData.itemsCount : (billData.items ? billData.items.length : 0)),
       itemsSummary: billData.itemsSummary || (billData.items ? billData.items.map(i => `${i.name} (x${i.qty})`).join(', ') : ''),
-      actionMode: actionMode || billData.actionMode || 'Save Invoice'
+      actionMode: actionMode || billData.actionMode || 'Save Invoice',
+      // Customer Details placed at columns at the end of the sheet
+      customerName: billData.customerName || '',
+      customerPhone: billData.customerPhone || '',
+      phoneNumber: billData.customerPhone || '',
+      customerAddress: billData.customerAddress || '',
+      address: billData.customerAddress || ''
     };
 
     if (!navigator.onLine) {
@@ -519,7 +678,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let queue = JSON.parse(localStorage.getItem('unsyncedBills')) || [];
     if (!queue || queue.length === 0) return;
 
-    let scriptURL = "AKfycbxwrG_yNWNZ0iP7Ajp9G20_SSEj2D9ZJd-GIFyBYy4MLHTSElgITnHzr54ZFbCztDHP";
+    let scriptURL = SCRIPT_URL;
     if (!scriptURL.startsWith('http')) {
       scriptURL = 'https://script.google.com/macros/s/' + scriptURL + '/exec';
     }
@@ -552,7 +711,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    let scriptURL = "AKfycbxwrG_yNWNZ0iP7Ajp9G20_SSEj2D9ZJd-GIFyBYy4MLHTSElgITnHzr54ZFbCztDHP";
+    let scriptURL = SCRIPT_URL;
     if (!scriptURL.startsWith('http')) {
       scriptURL = 'https://script.google.com/macros/s/' + scriptURL + '/exec';
     }
@@ -580,12 +739,16 @@ document.addEventListener('DOMContentLoaded', () => {
               timestamp: item.timestamp || dateTimeStr || new Date().toISOString(),
               displayDate: item.displayDate || formatDateForInvoice(dateVal),
               displayTime: timeVal,
+              customerName: item.customerName || '',
+              customerPhone: item.customerPhone || '',
+              customerAddress: item.customerAddress || '',
               paymentMode: item.paymentMode || 'Cash',
               itemsCount: parseInt(item.totalItems || item.itemsCount || 0, 10),
               totalItems: parseInt(item.totalItems || item.itemsCount || 0, 10),
               totalMRP: parseFloat(item.totalMRP || 0),
               totalSavings: parseFloat(item.discount || item.totalSavings || 0),
               discountAmount: parseFloat(item.discount || item.totalSavings || 0),
+              discount: parseFloat(item.discount || item.totalSavings || 0),
               netPayable: parseFloat(item.netAmount || item.netPayable || 0),
               netAmount: parseFloat(item.netAmount || item.netPayable || 0),
               itemsSummary: item.itemsSummary || '',
@@ -659,6 +822,9 @@ document.addEventListener('DOMContentLoaded', () => {
       dateTime: dateTimeStr,
       displayDate: formatDateForInvoice(state.invoice.date),
       displayTime: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      customerName: state.invoice.customerName ? state.invoice.customerName.trim() : '',
+      customerPhone: state.invoice.customerPhone ? state.invoice.customerPhone.trim() : '',
+      customerAddress: state.invoice.customerAddress ? state.invoice.customerAddress.trim() : '',
       paymentMode: state.invoice.paymentMode || 'Cash',
       itemsCount: totalItems,
       totalItems: totalItems,
@@ -723,10 +889,15 @@ document.addEventListener('DOMContentLoaded', () => {
     filteredHistory.forEach(h => {
       rowsHTML += `
         <tr>
-          <td><strong style="font-family: monospace; color: var(--sivakasi-purple-dark);">${h.id}</strong></td>
+          <td>
+            <strong style="font-family: monospace; color: var(--sivakasi-purple-dark);">${h.id}</strong>
+            ${h.customerName ? `<div style="font-size: 0.74rem; font-weight: 600; color: #1e293b; margin-top: 2px;">👤 ${escapeHTML(h.customerName)}</div>` : ''}
+            ${h.customerPhone ? `<div style="font-size: 0.70rem; color: #64748b;">📞 ${escapeHTML(h.customerPhone)}</div>` : ''}
+          </td>
           <td>
             ${h.displayDate || h.date} 
             <span style="font-size: 0.7rem; color: #64748b; font-weight: 500;">(${h.displayTime || ''})</span>
+            ${h.customerAddress ? `<div style="font-size: 0.68rem; color: #64748b; margin-top: 2px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHTML(h.customerAddress)}">📍 ${escapeHTML(h.customerAddress)}</div>` : ''}
           </td>
           <td class="text-center" style="font-weight: 700;">${h.itemsCount || 0}</td>
           <td><span style="font-size: 0.72rem; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-weight: 600;">${h.paymentMode || 'Cash'}</span></td>
@@ -777,11 +948,20 @@ document.addEventListener('DOMContentLoaded', () => {
           state.invoice.invoiceNo = record.id;
           state.invoice.date = record.date;
           state.invoice.paymentMode = record.paymentMode;
+          state.invoice.customerName = record.customerName || '';
+          state.invoice.customerPhone = record.customerPhone || '';
+          state.invoice.customerAddress = record.customerAddress || '';
           state.cart = JSON.parse(JSON.stringify(record.cart || {}));
 
           if (invDateInput) invDateInput.value = record.date;
           if (invNoInput) invNoInput.value = record.id;
           if (paymentModeInput) paymentModeInput.value = record.paymentMode;
+          if (custNameInput) custNameInput.value = state.invoice.customerName;
+          if (custPhoneInput) {
+            custPhoneInput.value = state.invoice.customerPhone;
+            updatePhoneValidationUI(state.invoice.customerPhone);
+          }
+          if (custAddressInput) custAddressInput.value = state.invoice.customerAddress;
 
           renderOrderTable();
           updateCalculations();
@@ -819,6 +999,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (totalQty === 0) {
       showToast('Cart is empty! Select items to download PDF.');
+      return;
+    }
+
+    // Phone Number Rule Validation
+    const phoneCheck = validatePhoneNumber(state.invoice.customerPhone);
+    if (!phoneCheck.valid) {
+      showToast(`⚠️ ${phoneCheck.message}`);
+      updatePhoneValidationUI(state.invoice.customerPhone);
+      if (custPhoneInput) custPhoneInput.focus();
       return;
     }
 
@@ -880,6 +1069,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (totalQty === 0) {
       showToast('Cart is empty! Select items to share PDF.');
+      return;
+    }
+
+    // Phone Number Rule Validation
+    const phoneCheck = validatePhoneNumber(state.invoice.customerPhone);
+    if (!phoneCheck.valid) {
+      showToast(`⚠️ ${phoneCheck.message}`);
+      updatePhoneValidationUI(state.invoice.customerPhone);
+      if (custPhoneInput) custPhoneInput.focus();
       return;
     }
 
@@ -989,21 +1187,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let rowsHTML = '';
     let totalVisibleItems = 0;
-    const query = (state.searchQuery || '').toLowerCase().trim();
+    const catalog = (typeof CRACKERS_CATALOG !== 'undefined' && Array.isArray(CRACKERS_CATALOG)) ? CRACKERS_CATALOG : [];
+    const query = (state.searchQuery !== undefined && state.searchQuery !== null) ? state.searchQuery.toString().trim().toLowerCase() : '';
 
-    CRACKERS_CATALOG.forEach(cat => {
+    catalog.forEach(cat => {
+      if (!cat || !cat.items) return;
+
       if (state.activeCategory !== 'ALL' && state.activeCategory !== cat.category) {
         return;
       }
 
-      // Filter items matching search query
+      // Filter items strictly by Category, Product Code, and Product Name (completely excluding price/rate)
       const matchingItems = cat.items.filter(item => {
+        if (!item) return false;
         if (!query) return true;
-        const codeMatch = (item.code || '').toLowerCase().includes(query);
-        const nameMatch = (item.name || '').toLowerCase().includes(query);
-        const tamilMatch = (item.tamilName || '').toLowerCase().includes(query);
-        const catMatch = (cat.category || '').toLowerCase().includes(query);
-        return codeMatch || nameMatch || tamilMatch || catMatch;
+
+        const codeStr = (item.code !== undefined && item.code !== null) ? item.code.toString().toLowerCase() : '';
+        const nameStr = (item.name !== undefined && item.name !== null) ? item.name.toString().toLowerCase() : '';
+        const tamilStr = (item.tamilName !== undefined && item.tamilName !== null) ? item.tamilName.toString().toLowerCase() : '';
+        const catStr = (cat.category !== undefined && cat.category !== null) ? cat.category.toString().toLowerCase() : '';
+
+        return codeStr.includes(query) ||
+               nameStr.includes(query) ||
+               tamilStr.includes(query) ||
+               catStr.includes(query);
       });
 
       if (matchingItems.length === 0) return;
@@ -1062,7 +1269,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <tr class="history-empty-row">
           <td colspan="6" style="padding: 2.5rem 1rem; text-align: center; color: #64748b; font-size: 0.95rem;">
             🔍 No crackers found matching "<strong>${escapeHTML(state.searchQuery)}</strong>"<br>
-            <span style="font-size: 0.82rem; color: #94a3b8;">Try searching by item code (e.g. SPK-01), English name, or Tamil description.</span>
+            <span style="font-size: 0.82rem; color: #94a3b8;">Try searching strictly by Product Code (e.g. 180 or SPK-01), Product Name, or Category.</span>
           </td>
         </tr>
       `;
@@ -1145,9 +1352,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function findItemById(id) {
-    for (const cat of CRACKERS_CATALOG) {
-      const item = cat.items.find(i => i.id === id);
-      if (item) return item;
+    const catalog = (typeof CRACKERS_CATALOG !== 'undefined' && Array.isArray(CRACKERS_CATALOG)) ? CRACKERS_CATALOG : [];
+    for (const cat of catalog) {
+      if (cat && cat.items && Array.isArray(cat.items)) {
+        const item = cat.items.find(i => i.id === id);
+        if (item) return item;
+      }
     }
     return null;
   }
@@ -1229,6 +1439,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const dateStr = formatDateForInvoice(state.invoice.date);
     const billNo = state.invoice.invoiceNo || 'SURYA-2026-1001';
     const payMode = state.invoice.paymentMode || 'Cash';
+    const custName = state.invoice.customerName ? state.invoice.customerName.trim() : '';
+    const custPhone = state.invoice.customerPhone ? state.invoice.customerPhone.trim() : '';
+    const custAddress = state.invoice.customerAddress ? state.invoice.customerAddress.trim() : '';
 
     let tableRowsHTML = '';
     if (pageItems.length === 0) {
@@ -1333,13 +1546,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
           <div class="inv-meta-grid">
             <div class="inv-meta-block">
-              <strong>BILL INFORMATION:</strong>
-              <p><strong>Date:</strong> <span>${dateStr}</span></p>
-              <p><strong>Payment Mode:</strong> <span>${payMode}</span></p>
+              <strong>BILLED TO / CUSTOMER:</strong>
+              <p><strong>Name:</strong> <span>${escapeHTML(custName) || 'Cash Customer'}</span></p>
+              <p><strong>Phone:</strong> <span>${escapeHTML(custPhone) || '-'}</span></p>
+              <p><strong>Address:</strong> <span>${escapeHTML(custAddress) || '-'}</span></p>
             </div>
             <div class="inv-meta-block" style="text-align: right;">
               <strong>BILL DETAILS:</strong>
               <p><strong>Bill No:</strong> <span style="font-family: monospace; font-weight: 700;">${billNo}</span></p>
+              <p><strong>Date:</strong> <span>${dateStr}</span></p>
+              <p><strong>Payment Mode:</strong> <span>${payMode}</span></p>
             </div>
           </div>
         </header>
